@@ -8,12 +8,15 @@ import {
   Post,
   Put,
   Query,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { Task, TaskStatus } from './task.model';
 import { CreateTaskDTO, UpdateTaskDto } from './dto/create-task.dto';
 import { FilterTaskDTO } from './dto/get-tasks-filter.dto';
 import { ApiTags, ApiBody, ApiOperation } from '@nestjs/swagger';
+import { StatusValidationPipe } from './pipes/task-status-validation.pipe';
 
 @ApiTags('tasks')
 @Controller('tasks')
@@ -35,6 +38,7 @@ export class TasksController {
   }
 
   @Post()
+  @UsePipes(ValidationPipe)
   createTask(@Body() createTaskDto: CreateTaskDTO) {
     return this.taskService.createTask(createTaskDto);
   }
@@ -49,16 +53,13 @@ export class TasksController {
 
   @Delete('/:id')
   deleteTaskById(@Param('id') id: string) {
-    const success = this.taskService.deleteTaskById(id);
-    return {
-      success,
-      message: success ? 'Task deleted successfully' : 'Task not found',
-    };
+    const msg = this.taskService.deleteTaskById(id);
+    return msg;
   }
   @Patch('/change-status/:id')
   updateTaskStatus(
     @Param('id') id: string,
-    @Body('status') status: TaskStatus,
+    @Body('status', StatusValidationPipe) status: TaskStatus,
   ) {
     return this.taskService.updateTaskStatus(id, status);
   }
